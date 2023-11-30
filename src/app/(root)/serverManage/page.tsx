@@ -1,5 +1,5 @@
-import ServerList from "../_components/server-list";
-import NextUIWrapper from "../_components/next-provider";
+import ServerList from "../../_components/server-list";
+import NextUIWrapper from "../../_components/next-provider";
 import { api } from "~/trpc/server";
 
 const ServerManage = async () => {

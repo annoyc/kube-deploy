@@ -12,6 +12,7 @@ import {
   Select,
   SelectItem,
   Textarea,
+  Selection,
 } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 
@@ -72,11 +73,11 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
     });
   };
 
-  const onProtocalChange = (keys: {currentKey: string}) => {
+  const onProtocalChange: (keys: Selection) => void = (keys) => {
     console.log("keys", keys);
     setFormData({
       ...formData,
-      protocal: keys.currentKey
+      protocal: keys.currentKey,
     });
   };
   const handleChange = (name: string, value: string) => {
@@ -157,18 +158,6 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
                   confirm && !formData.kubeToken && "请输入kubeToken"
                 }
               />
-              {/* <div className="flex justify-between px-1 py-2">
-              <Checkbox
-                classNames={{
-                  label: "text-small",
-                }}
-              >
-                Remember me
-              </Checkbox>
-              <Link color="primary" href="#" size="sm">
-                Forgot password?
-              </Link>
-            </div> */}
             </ModalBody>
             <ModalFooter>
               <Button
