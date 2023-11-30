@@ -15,6 +15,14 @@ export const serversRouter = createTRPCRouter({
       };
     }),
 
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.servers.delete({
+        where: { id: input.id },
+      });
+    }),
+
   create: protectedProcedure
     .input(
       z.object({

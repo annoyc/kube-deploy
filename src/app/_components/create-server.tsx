@@ -12,7 +12,7 @@ import {
   Select,
   SelectItem,
   Textarea,
-  Selection,
+  type Selection,
 } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 
