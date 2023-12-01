@@ -7,7 +7,11 @@ interface NextUIWrapperProps {
 }
 
 const NextUIWrapper: FunctionComponent<NextUIWrapperProps> = ({ children }) => {
-  return <NextUIProvider className="h-auto w-full">{children}</NextUIProvider>;
+  return (
+    <NextUIProvider className="box-border h-auto w-full">
+      {children}
+    </NextUIProvider>
+  );
 };
 
 export default NextUIWrapper;

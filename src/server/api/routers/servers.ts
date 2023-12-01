@@ -50,6 +50,35 @@ export const serversRouter = createTRPCRouter({
       });
     }),
 
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        protocal: z.string(),
+        domain: z.string(),
+        port: z.string(),
+        remark: z.string(),
+        kubeToken: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.servers.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          name: input.name,
+          protocal: input.protocal,
+          domain: input.domain,
+          port: input.port || "443",
+          remark: input.remark || "",
+          kubeToken: input.kubeToken,
+          createdBy: { connect: { id: ctx.session.user.id } },
+        },
+      });
+    }),
+
   getAll: protectedProcedure.query(({ ctx }) => {
     return ctx.db.servers.findMany({
       orderBy: { createdAt: "desc" },

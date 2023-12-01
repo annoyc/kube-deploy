@@ -17,22 +17,28 @@ export default async function Home({
   const session = await getServerAuthSession();
 
   return (
-    <main className="justify-cente flex h-full w-full flex-[1] flex-col items-center bg-gradient-to-b p-8 text-white">
+    <main className="box-border flex min-h-screen w-full flex-[1] flex-col items-center bg-gradient-to-b p-8 text-white">
       <NextUIWrapper>
         {session?.user.id ? (
           <TRPCReactProvider cookies={cookies().toString()}>
-            <div className="flex min-h-screen">
+            <div className="flex h-[calc(100vh-4rem)]">
               <div className="flex">
                 <Sidebar />
               </div>
               <div className="radius-xl shadow-3xl flex flex-[4] flex-col rounded-3xl bg-white">
                 <Navbar />
-                <div>{children}</div>
+                {children ? (
+                  <div>{children}</div>
+                ) : (
+                  <div className="flex flex-[1] items-center justify-center font-sans text-5xl font-extrabold text-black">
+                    欢迎使用kubeapp部署系统
+                  </div>
+                )}
               </div>
             </div>
           </TRPCReactProvider>
         ) : (
-          <div className="flex min-h-screen w-full flex-col items-center justify-center gap-12">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-12">
             <div className="font-sans text-5xl font-extrabold text-black">
               欢迎使用kubeapp部署系统
             </div>

@@ -1,5 +1,5 @@
 "use client";
-import React, { FunctionComponent } from "react";
+import React, { FunctionComponent, useEffect, useState } from "react";
 import { Servers } from "@prisma/client";
 import {
   Table,
@@ -8,7 +8,6 @@ import {
   TableColumn,
   TableRow,
   TableCell,
-  getKeyValue,
   Button,
   useDisclosure,
   Tooltip,
@@ -43,12 +42,12 @@ const columns = [
     label: "端口号",
   },
   {
-    key: "kubeToken",
-    label: "token",
-  },
-  {
     key: "remark",
     label: "备注",
+  },
+  {
+    key: "kubeToken",
+    label: "kubeToken",
   },
   {
     key: "actions",
@@ -58,6 +57,15 @@ const columns = [
 
 const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
   const { isOpen, onOpenChange, onOpen } = useDisclosure();
+  const [isEdit, setIsEdit] = useState(false);
+  const [rowData, setRowData] = useState<User>({
+    protocal: "http",
+    name: "",
+    domain: "",
+    port: "",
+    remark: "",
+    kubeToken: "",
+  });
   const router = useRouter();
   const deleteRes = api.serversRouter.delete.useMutation({
     onSuccess: (res) => {
@@ -66,10 +74,7 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
     },
   });
   const renderCell = React.useCallback((user: User, columnKey) => {
-    const cellValue = user[columnKey];
-    const handleDelete = () => {
-      console.log("user", user);
-    };
+    const cellValue = user[columnKey] as string;
 
     switch (columnKey) {
       case "actions":
@@ -77,18 +82,27 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
           <div className="relative flex items-center gap-4">
             <Tooltip color="primary" content="查看">
               <span className="cursor-pointer text-lg text-default-400 active:opacity-50">
-                <EyeIcon />
+                <EyeIcon
+                  onClick={() => {
+                    router.push(`/serverList/${user.id}`);
+                  }}
+                />
               </span>
             </Tooltip>
             <Tooltip color="primary" content="编辑">
               <span className="cursor-pointer text-lg text-default-400 active:opacity-50">
-                <EditIcon />
+                <EditIcon
+                  onClick={() => {
+                    setIsEdit(true);
+                    setRowData(user);
+                    onOpen();
+                  }}
+                />
               </span>
             </Tooltip>
             <Tooltip color="danger" content="删除">
               <span
                 onClick={() => {
-                  handleDelete();
                   deleteRes.mutate({
                     id: user.id,
                   });
@@ -104,6 +118,12 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
         return cellValue;
     }
   }, []);
+
+  useEffect(() => {
+    if (!isOpen && isEdit) {
+      setIsEdit(false);
+    }
+  }, [isOpen]);
 
   return (
     <div className="text-black">
@@ -127,7 +147,8 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
         </TableBody>
       </Table>
       <CreateServer
-        onOpen={onOpen}
+        isEdit={isEdit}
+        rowData={rowData}
         isOpen={isOpen}
         onOpenChange={onOpenChange}
       />
