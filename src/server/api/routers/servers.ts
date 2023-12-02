@@ -86,6 +86,20 @@ export const serversRouter = createTRPCRouter({
     });
   }),
 
+  getItemById: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(({ ctx, input }) => {
+      return ctx.db.servers.findFirst({
+        where: {
+          id: input.id,
+        },
+      });
+    }),
+
   getSecretMessage: protectedProcedure.query(() => {
     return "you can now see this secret message!";
   }),

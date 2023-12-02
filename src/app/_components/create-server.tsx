@@ -15,7 +15,6 @@ import {
   type Selection,
 } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { User } from "next-auth";
 import { Servers } from "@prisma/client";
 
 interface CreateDatabaseProps {

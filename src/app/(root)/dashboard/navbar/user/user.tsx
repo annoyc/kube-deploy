@@ -1,11 +1,9 @@
-import { FunctionComponent } from "react";
 import Link from "next/link";
 import { getServerAuthSession } from "~/server/auth";
-interface UserProps {}
 
-const User: FunctionComponent<UserProps> = async () => {
+const User = async () => {
   const session = await getServerAuthSession();
-  console.log("session", session);
+  // console.log("session", session);
   return (
     <div>
       <div className="text-center text-2xl text-black">

@@ -1,8 +1,8 @@
 import "~/styles/globals.css";
 
 import { Inter } from "next/font/google";
-import Sidebar from "../_components/dashboard/sidebar/sidebar";
-import Navbar from "../_components/dashboard/navbar/navbar";
+import Sidebar from "./dashboard/sidebar/sidebar";
+import Navbar from "./dashboard/navbar/page";
 import { TRPCReactProvider } from "~/trpc/react";
 import Link from "next/link";
 import { cookies } from "next/headers";
@@ -26,7 +26,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerAuthSession();
-  console.log(123, session);
   return (
     <html lang="en">
       <body className={`font-sans ${inter.variable}`}>

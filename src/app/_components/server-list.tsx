@@ -84,7 +84,7 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
               <span className="cursor-pointer text-lg text-default-400 active:opacity-50">
                 <EyeIcon
                   onClick={() => {
-                    router.push(`/serverList/${user.id}`);
+                    router.push(`/serverList/${user.id}?text=${user.name}`);
                   }}
                 />
               </span>
