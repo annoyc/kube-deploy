@@ -54,7 +54,7 @@ const Sidebar = () => {
   }
 
   return (
-    <div className="mr-6 flex flex-col items-center">
+    <div className=" mr-6 flex min-w-[220px] flex-col items-center">
       <div className="avatar placeholder mb-8 flex h-20 w-full items-center justify-start">
         <div className="mr-5 w-20 rounded-full bg-neutral text-neutral-content">
           <span className="text-2xl">LG</span>

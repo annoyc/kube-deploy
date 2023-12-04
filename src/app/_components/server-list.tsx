@@ -27,31 +27,38 @@ interface ServerListProps {
 const columns = [
   {
     key: "name",
-    label: "名称",
+    label: "服务器名称",
+    width: 200,
   },
   {
     key: "protocal",
     label: "协议",
+    width: 100,
   },
   {
     key: "domain",
     label: "域名",
+    width: 300,
   },
   {
     key: "port",
     label: "端口号",
+    width: 100,
   },
   {
     key: "remark",
     label: "备注",
+    width: 200,
   },
   {
     key: "kubeToken",
     label: "kubeToken",
+    width: 500,
   },
   {
     key: "actions",
     label: "操作",
+    width: 100,
   },
 ];
 
@@ -133,14 +140,18 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
       <Table aria-label="databases list component">
         <TableHeader>
           {columns.map((column) => (
-            <TableColumn key={column.key}>{column.label}</TableColumn>
+            <TableColumn align="center" width={column.width} key={column.key}>
+              {column.label}
+            </TableColumn>
           ))}
         </TableHeader>
         <TableBody>
           {data.map((row) => (
             <TableRow key={row.id}>
               {(columnKey) => (
-                <TableCell>{renderCell(row, columnKey)}</TableCell>
+                <TableCell className=" min-w-[100px] max-w-md overflow-auto">
+                  {renderCell(row, columnKey)}
+                </TableCell>
               )}
             </TableRow>
           ))}
