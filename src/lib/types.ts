@@ -15,6 +15,10 @@ export type InstallPackageSummaryItem = {
     appVersion: string;
     pkgVersion: string;
   };
+  currentVersion: {
+    appVersion: string;
+    pkgVersion: string;
+  };
   installedPackageRef: {
     identifier: string;
     context: {

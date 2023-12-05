@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import Loading from "~/components/Loading";
 import { api } from "~/trpc/react";
 import { useMenuListStore } from "~/zustand";
 
@@ -64,7 +65,7 @@ const Sidebar = () => {
         </span>
       </div>
       {isLoading ? (
-        <span className="loading loading-dots loading-lg h-full text-black"></span>
+        <Loading />
       ) : (
         <div className="w-full">
           <ul className="menu menu-lg w-full rounded-box bg-slate-400 p-4">
