@@ -31,3 +31,21 @@ export type InstallPackageSummaryItem = {
     };
   };
 };
+
+export type InstalledPackageDetail = {
+  installedPackageDetail: {
+    availablePackageRef: Pick<InstallPackageSummaryItem, "installedPackageRef">;
+    installedPackageRef: Pick<InstallPackageSummaryItem, "installedPackageRef">;
+    currentVersion: Pick<InstallPackageSummaryItem, "currentVersion">;
+    customDetail: {
+      "@type": string;
+      releaseRevision: number;
+    };
+    latestVersion: Pick<InstallPackageSummaryItem, "latestVersion">;
+    pkgVersionReference: Pick<InstallPackageSummaryItem, "pkgVersionReference">;
+    name: string;
+    postInstallationNotes: string;
+    status: Pick<InstallPackageSummaryItem, "status">;
+    valuesApplied: string;
+  };
+};
