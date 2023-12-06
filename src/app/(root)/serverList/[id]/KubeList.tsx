@@ -17,7 +17,7 @@ interface QuertData {
 
 const KubeList: FunctionComponent<Props> = ({ server }) => {
   const router = useRouter();
-  const { protocal, domain, port, kubeToken, id, name } = server;
+  const { protocal, domain, port, kubeToken, id } = server;
   const { isLoading, error, data } =
     api.kubesRouter.queryList.useQuery<QuertData>({
       url: `${protocal}://${domain}${port ? ":" + port : ""}`,

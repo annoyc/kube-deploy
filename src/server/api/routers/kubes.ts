@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import type { InstalledPackageDetail } from "~/lib/types";
 
 import {
   createTRPCRouter,
@@ -8,6 +9,24 @@ import {
 } from "~/server/api/trpc";
 
 export const kubesRouter = createTRPCRouter({
+  queryDetail: publicProcedure
+    .input(z.object({ url: z.string(), path: z.string(), token: z.string() }))
+    .query(async ({ input }) => {
+      const kubesApiRes = await fetch(input.url + input.path, {
+        headers: new Headers({
+          Authorization: `Bearer ${input.token}`,
+        }),
+      });
+      // perhaps some error handling
+      if (!kubesApiRes.ok) {
+        throw new TRPCError({
+          message: "请求外部接口出错",
+          code: "INTERNAL_SERVER_ERROR",
+        });
+      }
+      return (await kubesApiRes.json()) as InstalledPackageDetail;
+    }),
+
   queryList: publicProcedure
     .input(z.object({ url: z.string(), path: z.string(), token: z.string() }))
     .query(async ({ input }) => {
@@ -47,12 +66,13 @@ export const kubesRouter = createTRPCRouter({
         id: z.string(),
       }),
     )
-    .query(({ ctx, input }) => {
-      return ctx.db.servers.findFirst({
+    .query(async ({ ctx, input }) => {
+      const serverInfoRes = await ctx.db.servers.findFirst({
         where: {
           id: input.id,
         },
       });
+      return serverInfoRes;
     }),
 
   getSecretMessage: protectedProcedure.query(() => {

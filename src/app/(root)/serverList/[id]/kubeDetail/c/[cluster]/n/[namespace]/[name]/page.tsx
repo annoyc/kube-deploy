@@ -10,12 +10,11 @@ const Page = async ({
   console.log("params", params);
   const { protocal, domain, port, kubeToken } =
     (await api.serversRouter.getItemById.query({ id: params.id }))!;
-  const kubeDetailRes = await api.kubesRouter.queryList.query({
+  const kubeDetailRes = await api.kubesRouter.queryDetail.query({
     url: `${protocal}://${domain}${port ? ":" + port : ""}`,
     path: `/apis/core/packages/v1alpha1/installedpackages/plugin/helm.packages/v1alpha1/c/${params.cluster}/ns/${params.namespace}/${params.name}`,
     token: kubeToken,
   });
-  console.log("kubeDetailRes", kubeDetailRes);
 
   return <KubeDetail data={kubeDetailRes} />;
 };

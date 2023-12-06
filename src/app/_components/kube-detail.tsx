@@ -8,9 +8,9 @@ interface Props {
 }
 
 const KubeDetail: FunctionComponent<Props> = ({ data }) => {
-  console.log("kube detail", data);
+  console.log("data", data);
   return (
-    <div className="">
+    <div className="text-black">
       <h1>hello kube detail</h1>
     </div>
   );
