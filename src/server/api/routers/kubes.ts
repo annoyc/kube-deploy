@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import type { InstalledPackageDetail } from "~/lib/types";
@@ -9,6 +10,38 @@ import {
 } from "~/server/api/trpc";
 
 export const kubesRouter = createTRPCRouter({
+  deploy: publicProcedure
+    .input(
+      z.object({
+        url: z.string(),
+        path: z.string(),
+        token: z.string(),
+        data: z.any(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      if (input.data.valuesApplied) delete input.data.valuesApplied;
+      if (input.data.postInstallationNotes)
+        delete input.data.postInstallationNotes;
+      const kubesApiRes = await fetch(input.url + input.path, {
+        method: "PUT",
+        body: JSON.stringify(input.data),
+        headers: new Headers({
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${input.token}`,
+        }),
+      });
+      // perhaps some error handling
+      if (!kubesApiRes.ok) {
+        throw new TRPCError({
+          message: "请求外部接口出错",
+          code: "INTERNAL_SERVER_ERROR",
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return await kubesApiRes.json();
+    }),
+
   queryDetail: publicProcedure
     .input(z.object({ url: z.string(), path: z.string(), token: z.string() }))
     .query(async ({ input }) => {
@@ -44,38 +77,4 @@ export const kubesRouter = createTRPCRouter({
       }
       return (await kubesApiRes.json()) as unknown;
     }),
-
-  delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.servers.delete({
-        where: { id: input.id },
-      });
-    }),
-
-  getAll: protectedProcedure.query(({ ctx }) => {
-    return ctx.db.servers.findMany({
-      orderBy: { createdAt: "desc" },
-      where: { createdBy: { id: ctx.session.user.id } },
-    });
-  }),
-
-  getItemById: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const serverInfoRes = await ctx.db.servers.findFirst({
-        where: {
-          id: input.id,
-        },
-      });
-      return serverInfoRes;
-    }),
-
-  getSecretMessage: protectedProcedure.query(() => {
-    return "you can now see this secret message!";
-  }),
 });

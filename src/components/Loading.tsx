@@ -1,11 +1,11 @@
-import { type FunctionComponent } from "react";
+import { type FC } from "react";
 import { cn } from "~/lib/utils";
 
 interface Props {
   className?: string;
 }
 
-const Loading: FunctionComponent<Props> = ({ className }) => {
+const Loading: FC<Props> = ({ className }) => {
   return (
     <span
       className={cn(
