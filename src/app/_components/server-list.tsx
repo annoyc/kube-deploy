@@ -1,6 +1,11 @@
 "use client";
-import React, { FunctionComponent, useEffect, useState } from "react";
-import { Servers } from "@prisma/client";
+import React, {
+  type FunctionComponent,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { type Servers } from "@prisma/client";
 import {
   Table,
   TableHeader,
@@ -13,16 +18,12 @@ import {
   Tooltip,
 } from "@nextui-org/react";
 import CreateServer from "./create-server";
-import { User } from "next-auth";
 import { EyeIcon } from "./icons/EyeIcon";
 import { EditIcon } from "./icons/EditIcon";
 import { DeleteIcon } from "./icons/DeleteIcon";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
-
-interface ServerListProps {
-  data: Servers[];
-}
+import Loading from "~/components/Loading";
 
 const columns = [
   {
@@ -62,10 +63,15 @@ const columns = [
   },
 ];
 
-const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
+type RowDataType = Pick<
+  Servers,
+  "protocal" | "name" | "domain" | "port" | "remark" | "kubeToken"
+>;
+
+const ServerList: FunctionComponent = () => {
   const { isOpen, onOpenChange, onOpen } = useDisclosure();
   const [isEdit, setIsEdit] = useState(false);
-  const [rowData, setRowData] = useState<User>({
+  const [rowData, setRowData] = useState<RowDataType>({
     protocal: "http",
     name: "",
     domain: "",
@@ -80,8 +86,8 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
       console.log("res", res);
     },
   });
-  const renderCell = React.useCallback((user: User, columnKey) => {
-    const cellValue = user[columnKey] as string;
+  const renderCell = React.useCallback((server: Servers, columnKey: string) => {
+    const cellValue = server[columnKey] as ReactNode;
 
     switch (columnKey) {
       case "actions":
@@ -91,7 +97,7 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
               <span className="cursor-pointer text-lg text-default-400 active:opacity-50">
                 <EyeIcon
                   onClick={() => {
-                    router.push(`/serverList/${user.id}?text=${user.name}`);
+                    router.push(`/serverList/${server.id}?text=${server.name}`);
                   }}
                 />
               </span>
@@ -101,7 +107,7 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
                 <EditIcon
                   onClick={() => {
                     setIsEdit(true);
-                    setRowData(user);
+                    setRowData(server);
                     onOpen();
                   }}
                 />
@@ -111,7 +117,7 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
               <span
                 onClick={() => {
                   deleteRes.mutate({
-                    id: user.id,
+                    id: server.id,
                   });
                 }}
                 className="cursor-pointer text-lg text-danger active:opacity-50"
@@ -132,7 +138,9 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
     }
   }, [isOpen]);
 
-  return (
+  const { isLoading, data } = api.serversRouter.getAll.useQuery<Servers[]>();
+
+  return !isLoading && data?.length ? (
     <div className="text-black">
       <Button onPress={onOpen} color="primary" className=" mb-4">
         新增
@@ -163,6 +171,10 @@ const ServerList: FunctionComponent<ServerListProps> = ({ data }) => {
         isOpen={isOpen}
         onOpenChange={onOpenChange}
       />
+    </div>
+  ) : (
+    <div className="h-full flex items-center justify-center">
+      <Loading className="flex h-full items-center justify-center" />
     </div>
   );
 };

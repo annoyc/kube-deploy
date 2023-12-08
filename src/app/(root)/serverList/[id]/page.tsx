@@ -1,9 +1,14 @@
-import { api } from "~/trpc/server";
+"use client";
+import { api } from "~/trpc/react";
 import KubeList from "./KubeList";
+import { type Servers } from "@prisma/client";
+import Loading from "~/components/Loading";
 
-const ServerDetail = async ({ params }: { params: { id: string } }) => {
-  const detail = (await api.serversRouter.getItemById.query(params))!;
-  return <KubeList server={detail} />;
+const ServerDetail = ({ params }: { params: { id: string } }) => {
+  const { data, isLoading } = api.serversRouter.getItemById.useQuery<Servers>({
+    id: params.id,
+  });
+  return !isLoading && data!.id ? <KubeList server={data!} /> : <Loading />;
 };
 
 export default ServerDetail;

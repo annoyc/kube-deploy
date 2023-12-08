@@ -1,6 +1,6 @@
 "use client";
 import { NextUIProvider } from "@nextui-org/react";
-import { FunctionComponent, ReactNode } from "react";
+import type { FunctionComponent, ReactNode } from "react";
 
 interface NextUIWrapperProps {
   children: ReactNode;

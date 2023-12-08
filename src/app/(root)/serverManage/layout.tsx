@@ -8,5 +8,5 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="p-8">{children}</div>;
+  return <div className="flex h-full p-8">{children}</div>;
 }
