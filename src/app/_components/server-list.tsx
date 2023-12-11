@@ -3,7 +3,7 @@ import React, {
   type FunctionComponent,
   useEffect,
   useState,
-  type ReactNode,
+  type Key,
 } from "react";
 import { type Servers } from "@prisma/client";
 import {
@@ -16,6 +16,7 @@ import {
   Button,
   useDisclosure,
   Tooltip,
+  Textarea,
 } from "@nextui-org/react";
 import CreateServer from "./create-server";
 import { EyeIcon } from "./icons/EyeIcon";
@@ -24,6 +25,8 @@ import { DeleteIcon } from "./icons/DeleteIcon";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
 import Loading from "~/components/Loading";
+import { getQueryKey } from "@trpc/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 const columns = [
   {
@@ -69,6 +72,7 @@ type RowDataType = Pick<
 >;
 
 const ServerList: FunctionComponent = () => {
+  const router = useRouter();
   const { isOpen, onOpenChange, onOpen } = useDisclosure();
   const [isEdit, setIsEdit] = useState(false);
   const [rowData, setRowData] = useState<RowDataType>({
@@ -79,15 +83,16 @@ const ServerList: FunctionComponent = () => {
     remark: "",
     kubeToken: "",
   });
-  const router = useRouter();
+  const queryClient = useQueryClient();
+  const listQueryKey = getQueryKey(api.serversRouter.getAll);
   const deleteRes = api.serversRouter.delete.useMutation({
-    onSuccess: (res) => {
-      router.refresh();
+    onSuccess: async (res) => {
+      await queryClient.invalidateQueries(listQueryKey);
       console.log("res", res);
     },
   });
-  const renderCell = React.useCallback((server: Servers, columnKey: string) => {
-    const cellValue = server[columnKey] as ReactNode;
+  const renderCell = React.useCallback((server: Servers, columnKey: Key) => {
+    const cellValue = server[columnKey];
 
     switch (columnKey) {
       case "actions":
@@ -140,7 +145,7 @@ const ServerList: FunctionComponent = () => {
 
   const { isLoading, data } = api.serversRouter.getAll.useQuery<Servers[]>();
 
-  return !isLoading && data?.length ? (
+  return (
     <div className="text-black">
       <Button onPress={onOpen} color="primary" className=" mb-4">
         新增
@@ -153,12 +158,29 @@ const ServerList: FunctionComponent = () => {
             </TableColumn>
           ))}
         </TableHeader>
-        <TableBody>
-          {data.map((row) => (
+        <TableBody
+          isLoading={isLoading}
+          loadingContent={<Loading />}
+          emptyContent={
+            isLoading
+              ? "加载中，请稍候"
+              : !isLoading && !data?.length
+                ? "暂无内容"
+                : ""
+          }
+        >
+          {(data ?? []).map((row) => (
             <TableRow key={row.id}>
               {(columnKey) => (
                 <TableCell className=" min-w-[100px] max-w-md overflow-auto">
-                  {renderCell(row, columnKey)}
+                  {columnKey === "kubeToken" ? (
+                    <Textarea
+                      className="max-w-xs"
+                      defaultValue={renderCell(row, columnKey)}
+                    />
+                  ) : (
+                    renderCell(row, columnKey)
+                  )}
                 </TableCell>
               )}
             </TableRow>
@@ -171,10 +193,6 @@ const ServerList: FunctionComponent = () => {
         isOpen={isOpen}
         onOpenChange={onOpenChange}
       />
-    </div>
-  ) : (
-    <div className="h-full flex items-center justify-center">
-      <Loading className="flex h-full items-center justify-center" />
     </div>
   );
 };

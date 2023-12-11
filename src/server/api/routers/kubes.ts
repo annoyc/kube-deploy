@@ -32,12 +32,11 @@ export const kubesRouter = createTRPCRouter({
         }),
       });
 
-      console.log("kubesApiDeploy", await kubesApiRes.text());
-      // perhaps some error handling
       // perhaps some error handling
       if (!kubesApiRes.ok) {
+        const fetchError = await kubesApiRes.text();
         throw new TRPCError({
-          message: "请求外部接口出错",
+          message: fetchError,
           code: "INTERNAL_SERVER_ERROR",
         });
       }
@@ -48,23 +47,19 @@ export const kubesRouter = createTRPCRouter({
   queryDetail: publicProcedure
     .input(z.object({ url: z.string(), path: z.string(), token: z.string() }))
     .query(async ({ input }) => {
-      try {
-        const kubesApiRes = await fetch(input.url + input.path, {
-          headers: new Headers({
-            Authorization: `Bearer ${input.token}`,
-          }),
+      const kubesApiRes = await fetch(input.url + input.path, {
+        headers: new Headers({
+          Authorization: `Bearer ${input.token}`,
+        }),
+      });
+      if (!kubesApiRes.ok) {
+        const fetchError = await kubesApiRes.text();
+        throw new TRPCError({
+          message: fetchError,
+          code: "INTERNAL_SERVER_ERROR",
         });
-        if (!kubesApiRes.ok) {
-          throw new TRPCError({
-            message: "请求外部接口出错",
-            code: "INTERNAL_SERVER_ERROR",
-          });
-        }
-        return (await kubesApiRes.json()) as InstalledPackageDetail;
-      } catch (error) {
-        console.log("catch error", error);
-        return null;
       }
+      return (await kubesApiRes.json()) as InstalledPackageDetail;
     }),
 
   queryList: publicProcedure
@@ -77,8 +72,9 @@ export const kubesRouter = createTRPCRouter({
       });
       // perhaps some error handling
       if (!kubesApiRes.ok) {
+        const fetchError = await kubesApiRes.text();
         throw new TRPCError({
-          message: "请求外部接口出错",
+          message: fetchError,
           code: "INTERNAL_SERVER_ERROR",
         });
       }

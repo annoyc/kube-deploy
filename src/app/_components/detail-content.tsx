@@ -9,6 +9,9 @@ import { type kubeInfoProp } from "../(root)/serverList/[id]/kubeDetail/c/[clust
 import { api } from "~/trpc/react";
 import Loading from "~/components/Loading";
 import { useRouter } from "next/navigation";
+import { cn } from "~/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 
 interface Props {
   serverData: Servers | null | undefined;
@@ -32,7 +35,6 @@ const DetailContent: FC<Props> = ({ serverData, kubeInfo }) => {
 
   useEffect(() => {
     if (!isLoading && data?.installedPackageDetail) {
-      console.log("data.installedPackageDetail", data?.installedPackageDetail);
       try {
         const valuesApplied = data?.installedPackageDetail?.valuesApplied ?? "";
         const originalData = JSON.stringify(JSON.parse(valuesApplied), null, 2);
@@ -44,10 +46,15 @@ const DetailContent: FC<Props> = ({ serverData, kubeInfo }) => {
       }
     }
   }, [isLoading]);
-
+  const queryClient = useQueryClient();
+  const detailQueryKey = getQueryKey(api.kubesRouter.queryDetail);
   const deployMutation = api.kubesRouter.deploy.useMutation({
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      console.log("deployMutation res", res);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (!res?.installedPackageRef) return;
       router.back();
+      await queryClient.invalidateQueries(detailQueryKey);
     },
   });
 
@@ -98,7 +105,10 @@ const DetailContent: FC<Props> = ({ serverData, kubeInfo }) => {
           </div>
           <div className="flex flex-[2] items-center justify-end gap-4">
             <div
-              className="btn btn-primary"
+              className={cn(
+                "btn btn-primary",
+                deployMutation.isLoading && "btn-disabled",
+              )}
               onClick={() => {
                 deployMutation.mutate({
                   url: `${serverData!.protocal}://${serverData!.domain}${
@@ -113,6 +123,11 @@ const DetailContent: FC<Props> = ({ serverData, kubeInfo }) => {
                 });
               }}
             >
+              <span
+                className={cn(
+                  deployMutation.isLoading && "loading loading-spinner",
+                )}
+              ></span>
               开始部署
             </div>
             <div

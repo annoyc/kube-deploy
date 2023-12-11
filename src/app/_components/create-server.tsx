@@ -12,10 +12,10 @@ import {
   Select,
   SelectItem,
   Textarea,
-  type Selection,
 } from "@nextui-org/react";
-import { useRouter } from "next/navigation";
-import { Servers } from "@prisma/client";
+import { type Servers } from "@prisma/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 
 interface CreateDatabaseProps {
   onOpenChange: () => void;
@@ -52,19 +52,18 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
     clearForm();
     close();
   };
-  const router = useRouter();
+  const queryClient = useQueryClient();
+  const queryListKey = getQueryKey(api.serversRouter.getAll);
   const createDatabaseResult = api.serversRouter.create.useMutation({
-    onSuccess: (res) => {
+    onSuccess: async (_) => {
       clearForm();
-      router.refresh();
-      console.log("createDatabaseResult", res);
+      await queryClient.invalidateQueries(queryListKey);
     },
   });
   const updateServerResult = api.serversRouter.update.useMutation({
-    onSuccess: (res) => {
+    onSuccess: async (_) => {
       clearForm();
-      router.refresh();
-      console.log("updateServerResult", res);
+      await queryClient.invalidateQueries(queryListKey);
     },
   });
   const onConfirm = () => {
@@ -92,7 +91,7 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
     });
   };
 
-  const onProtocalChange: (keys: Selection) => void = (keys) => {
+  const onProtocalChange: (keys: { currentKey: string }) => void = (keys) => {
     console.log("keys", keys);
     setFormData({
       ...formData,
@@ -163,11 +162,8 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
                 label="端口号"
                 variant="bordered"
                 isClearable
-                isRequired
                 value={formData.port}
                 onValueChange={(value) => handleChange("port", value)}
-                color={!formData.port && confirm ? "danger" : "default"}
-                errorMessage={confirm && !formData.port && "请输入端口号"}
               />
               <Input
                 className="text-black"
