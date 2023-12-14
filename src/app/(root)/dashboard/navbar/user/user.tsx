@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getServerAuthSession } from "~/server/auth";
 
@@ -15,7 +16,7 @@ const User = async () => {
               className="avatar btn btn-circle btn-ghost"
             >
               <div className="w-10 rounded-full">
-                <img alt="user image" src={session.user?.image || ""} />
+                <Image alt="user image" src={session.user?.image ?? ""} />
               </div>
             </div>
             <ul className="menu dropdown-content menu-sm z-[1] mt-3 w-52 rounded-box bg-base-100 p-2 shadow">

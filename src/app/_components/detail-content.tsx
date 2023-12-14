@@ -62,8 +62,8 @@ const DetailContent: FC<Props> = ({ serverData, kubeInfo }) => {
   const handleEditorMount = (editor: any) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const modifiedEditor = editor.getModifiedEditor();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    modifiedEditor.onDidChangeModelContent((_) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    modifiedEditor.onDidChangeModelContent((_: any) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       setModifiedValue(modifiedEditor.getValue());
     });

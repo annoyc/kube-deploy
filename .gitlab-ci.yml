@@ -1,0 +1,194 @@
+image: node:18.17.0
+cache: # 缓存
+  paths:
+    - node_modules
+stages:
+  - install
+  - build
+  - build_image
+  - deploy
+
+variables:
+  FRONT_IMAGE_KT: $REGISTRY_URL/$CI_PROJECT_PATH:TEST_$CI_COMMIT_REF_NAME
+  DEPLOY_EVERYTIME_EVEN_SAME_IMAGE: $CI_COMMIT_SHORT_SHA
+
+install_front:
+  stage: install
+  only:
+    refs:
+      - branches
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*(deployTest).*/
+  script:
+    - yarn
+  after_script:
+    - ls
+    - ls node_modules
+  tags:
+    - gz_test
+
+build_kt_front:
+  stage: build
+  only:
+    refs:
+      - branches
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*(deployTest).*/
+  artifacts:
+    paths:
+      - dist
+    expire_in: 1 hour
+  script:
+    - yarn build
+  after_script:
+    - ls
+    - ls .next
+  tags:
+    - gz_test
+
+build_kt_image:
+  image: docker:stable
+  variables:
+    DOCKER_HOST: docker
+    DOCKER_TLS_CERTDIR: ""
+  stage: build_image
+  only:
+    refs:
+      - branches
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*(deployTest).*/
+  services:
+    - name: docker:stable-dind
+      entrypoint:
+        [
+          "dockerd-entrypoint.sh",
+          "--registry-mirror=https://5n2wvzer.mirror.aliyuncs.com",
+        ]
+  before_script:
+    - echo $REGISTRY_PASSWORD | docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $REGISTRY_URL
+  script:
+    - docker build -t $FRONT_IMAGE_KT  -f docker/Dockerfile .
+    - docker push $FRONT_IMAGE_KT
+  tags:
+    - gz_test
+
+deploy_test_k3s:
+  image: $REGISTRY_URL/everyone/baseimage/kubectl:latest
+  only:
+    refs:
+      - branches
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /.*(deployTest).*/
+  stage: deploy
+  variables:
+    SERVICE_NAME: jyjc-front
+    SERVICE_PORT: 80
+    SERVICE_REPLICAS: 1
+    RUN_ENV: test
+    REQ_CPU: 100m
+    REQ_MEMORY: 100Mi
+    LIMIT_CPU: 150m
+    LIMIT_MEMORY: 150Mi
+    NAMESPACE: gz-front
+  script: # 以下是重点修改的地方
+    - kubectl config set-cluster testCluster --server=https://10.10.0.22:6443
+      --insecure-skip-tls-verify=true # 配置集群地址
+    - kubectl config set-credentials admin --token=eyJhbGciOiJSUzI1NiIsImtpZCI6InotMFVwb1piQTFjb1VWWkRWT1VDd3FvOWJYbUdweFJhZVhlbUI5UnU3dTgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImFkbWluLXRva2VuLXNxeHc4Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImFkbWluIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiYjY0Y2YzYzUtYWY0Zi00NzhhLThhMjItM2Y5ZGQ5MDk4NGY2Iiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50OmRlZmF1bHQ6YWRtaW4ifQ.DUUjKi7RtNAGMWko4GIlMe7PgszQKhcyrGYo15TK19Mz9-WJsirReFhgeoZeCxJfNck7n5N7VKehBai-Kc2zPn4tLHKnP7x7xDet1MsZWCML4Fulma77wN3a-h5fgxK6ewqk7-s8iDb8rbjERPmqRetlzX5bObe5ThuZwo1dX2c6tYUjFI10C0Eqo6rnTbntwxGki3EJIiocc8lcCbeXyOViBoOqXsHx1crfb9-96LIFRr3781gTEsPW1KSxfK8MnYNBS_od_ysIU_ihF0UUImxUK_ELk02no46RBaKqxApiLKMoSXw11ljJkS70Tct5ESDeYRhlmqoMmh4_XONUAw # 配置认证信息
+    - kubectl config set-context default-context --cluster=testCluster --user=admin # 配置context信息
+    - kubectl config use-context default-context # 选择使用刚配置的contextt
+    - cd docker/
+    - /bin/sh deploy_k8s.sh $SERVICE_NAME $SERVICE_PORT $FRONT_IMAGE_KT
+      $SERVICE_REPLICAS  $RUN_ENV $NAMESPACE # 执行部署脚本，传入两个参数，一个image的tag，一个是namespace，我们这里默认是default
+  tags:
+    - gz_test
+
+# 生产环境构建
+build_prod_front:
+  stage: build
+  only:
+    refs:
+      - tags
+    # refs:
+    #   - dev
+    #   - branches
+    # variables:
+    #   - $CI_COMMIT_MESSAGE =~ /.*(all|formal|deployFormal|deployProd).*/
+  artifacts:
+    paths:
+      - dist
+    expire_in: 1 hour
+  script:
+    - npm run build
+  after_script:
+    - ls
+    - ls dist
+  tags:
+    - gz_test
+
+build_prod_image:
+  image: docker:stable
+  stage: build_image
+  variables:
+    DOCKER_HOST: docker
+    DOCKER_TLS_CERTDIR: ""
+  only:
+    refs:
+      - tags
+    # refs:
+    #   - dev
+    #   - branches
+    # variables:
+    #   - $CI_COMMIT_MESSAGE =~ /.*(all|formal|deployFormal|deployProd).*/
+  services:
+    - name: docker:stable-dind
+      entrypoint:
+        [
+          "dockerd-entrypoint.sh",
+          "--registry-mirror=https://5n2wvzer.mirror.aliyuncs.com",
+        ]
+  before_script:
+    - ls dist
+    - echo $REGISTRY_PASSWORD | docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $REGISTRY_URL
+  script:
+    - docker build  -t $FRONT_IMAGE -f docker/Dockerfile .
+    - docker push $FRONT_IMAGE
+  tags:
+    - gz_test
+
+deploy_prod_k3s:
+  image: $REGISTRY_URL/everyone/baseimage/kubectl:latest
+  when: manual
+  only:
+    refs:
+      - tags
+    # refs:
+    #   - dev
+    #   - branches
+    # variables:
+    #   - $CI_COMMIT_MESSAGE =~ /.*(all|formal|deployFormal|deployProd).*/
+  stage: deploy
+  variables:
+    PROD_GZ_K3S_TOKEN: placeholder
+    PROD_K3S_URL: placeholder
+    # Kubernetes访问的token，这个变量可以使用Gitlab的隐私变量存储，最好不要明文写在这里，这里只是方便理解
+    SERVICE_NAME: jyjc-front
+    SERVICE_PORT: 80
+    SERVICE_REPLICAS: 1
+    RUN_ENV: prod
+    REQ_CPU: 100m
+    REQ_MEMORY: 100Mi
+    LIMIT_CPU: 150m
+    LIMIT_MEMORY: 150Mi
+    NAMESPACE: default
+  # environment:
+  #   name: govboot_prod
+  script: # 以下是重点修改的地方
+    - kubectl config set-cluster testCluster --server=$PROD_K3S_URL --insecure-skip-tls-verify=true # 配置集群地址
+    - kubectl config set-credentials admin --token=$PROD_GZ_K3S_TOKEN # 配置认证信息
+    - kubectl config set-context default-context --cluster=testCluster --user=admin # 配置context信息
+    - kubectl config use-context default-context # 选择使用刚配置的context
+    # - kubectl get cs # 查询下组件状态，测试下能不能用。。。
+    - cd docker/
+    - /bin/sh deploy_k8s.sh $SERVICE_NAME $SERVICE_PORT $FRONT_IMAGE $SERVICE_REPLICAS  $RUN_ENV $NAMESPACE # 执行部署脚本，传入两个参数，一个image的tag，一个是namespace，我们这里默认是default
+  tags:
+    - jidianyuan

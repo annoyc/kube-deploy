@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${NAMESPACE}
+  labels:
+    app: ${SERVICE_NAME}
+spec:
+  replicas: ${SERVICE_REPLICAS}
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}
+    spec:
+      containers:
+        - name: ${SERVICE_NAME}
+          image: ${SERVICE_IMAGE}
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: ${REQ_CPU}
+              memory: ${REQ_MEMORY}
+            limits:
+              cpu: ${LIMIT_CPU}
+              memory: ${LIMIT_MEMORY}
+          ports:
+            - containerPort: ${SERVICE_PORT}
+              name: http-port
+          env:
+            - name: RUN_ENV
+              value: ${RUN_ENV}
+            - name: DEPLOY_EVERYTIME_EVEN_SAME_IMAGE
+              value: a_${DEPLOY_EVERYTIME_EVEN_SAME_IMAGE}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: ${IMAGE_PULL_SECRET_ENV}
+      terminationGracePeriodSeconds: 30

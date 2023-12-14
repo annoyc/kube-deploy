@@ -36,9 +36,10 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
   const [formData, setFormData] = useState<
     Pick<
       Servers,
-      "protocal" | "name" | "domain" | "port" | "remark" | "kubeToken"
+      "protocal" | "name" | "domain" | "port" | "remark" | "kubeToken" | "id"
     >
   >({
+    id: "",
     protocal: "http",
     name: "",
     domain: "",
@@ -66,6 +67,11 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
       await queryClient.invalidateQueries(queryListKey);
     },
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSelectionChange = (e: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    setFormData({ ...formData, protocal: e.target.value });
+  };
   const onConfirm = () => {
     setConfirm(true);
     if (
@@ -82,6 +88,7 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
   const clearForm = () => {
     setConfirm(false);
     setFormData({
+      id: "",
       protocal: "http",
       name: "",
       domain: "",
@@ -91,13 +98,6 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
     });
   };
 
-  const onProtocalChange: (keys: { currentKey: string }) => void = (keys) => {
-    console.log("keys", keys);
-    setFormData({
-      ...formData,
-      protocal: keys.currentKey,
-    });
-  };
   const handleChange = (name: string, value: string) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
@@ -108,6 +108,7 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
       setFormData((prevData) => ({ ...prevData, ...rowData }));
     }
   }, [isEdit]);
+
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="top-center">
       <ModalContent>
@@ -130,18 +131,18 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
               />
               <Select
                 defaultSelectedKeys={["http"]}
-                onSelectionChange={onProtocalChange}
+                onChange={handleSelectionChange}
                 label="协议"
                 variant="bordered"
                 isRequired
               >
-                <SelectItem className="text-black" key={"http"} value="http">
+                <SelectItem className="text-black" key="http" value={["http"]}>
                   http
                 </SelectItem>
                 <SelectItem
                   className="text-black"
-                  key={"https"}
-                  value={formData.protocal}
+                  key="https"
+                  value={["https"]}
                 >
                   https
                 </SelectItem>
@@ -162,7 +163,7 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
                 label="端口号"
                 variant="bordered"
                 isClearable
-                value={formData.port}
+                value={formData.port ?? ""}
                 onValueChange={(value) => handleChange("port", value)}
               />
               <Input
@@ -170,7 +171,7 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
                 label="备注"
                 variant="bordered"
                 isClearable
-                value={formData.remark}
+                value={formData.remark ?? ""}
                 onValueChange={(value) => handleChange("remark", value)}
               />
               <Textarea
@@ -198,10 +199,15 @@ const CreateDatabase: FunctionComponent<CreateDatabaseProps> = ({
                 color="primary"
                 onPress={() => {
                   if (!onConfirm()) return;
+                  const postData = {
+                    ...formData,
+                    port: formData.port ?? "",
+                    remark: formData.remark ?? "",
+                  };
                   if (isEdit) {
-                    updateServerResult.mutate(formData);
+                    updateServerResult.mutate(postData);
                   } else {
-                    createDatabaseResult.mutate(formData);
+                    createDatabaseResult.mutate(postData);
                   }
                   onModalClose(onClose);
                 }}

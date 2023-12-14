@@ -1,10 +1,5 @@
 "use client";
-import React, {
-  type FunctionComponent,
-  useEffect,
-  useState,
-  type Key,
-} from "react";
+import React, { type FunctionComponent, useEffect, useState } from "react";
 import { type Servers } from "@prisma/client";
 import {
   Table,
@@ -91,51 +86,56 @@ const ServerList: FunctionComponent = () => {
       console.log("res", res);
     },
   });
-  const renderCell = React.useCallback((server: Servers, columnKey: Key) => {
-    const cellValue = server[columnKey];
+  const renderCell = React.useCallback(
+    (server: Servers, columnKey: string | number) => {
+      const cellValue = (server as unknown as keyof Servers)[columnKey];
 
-    switch (columnKey) {
-      case "actions":
-        return (
-          <div className="relative flex items-center gap-4">
-            <Tooltip color="primary" content="查看">
-              <span className="cursor-pointer text-lg text-default-400 active:opacity-50">
-                <EyeIcon
-                  onClick={() => {
-                    router.push(`/serverList/${server.id}?text=${server.name}`);
-                  }}
-                />
-              </span>
-            </Tooltip>
-            <Tooltip color="primary" content="编辑">
-              <span className="cursor-pointer text-lg text-default-400 active:opacity-50">
-                <EditIcon
+      switch (columnKey) {
+        case "actions":
+          return (
+            <div className="relative flex items-center gap-4">
+              <Tooltip color="primary" content="查看">
+                <span
+                  className="cursor-pointer text-lg text-default-400 active:opacity-50"
+                  onClick={() =>
+                    router.push(`/serverList/${server.id}?text=${server.name}`)
+                  }
+                >
+                  <EyeIcon />
+                </span>
+              </Tooltip>
+              <Tooltip color="primary" content="编辑">
+                <span
+                  className="cursor-pointer text-lg text-default-400 active:opacity-50"
                   onClick={() => {
                     setIsEdit(true);
                     setRowData(server);
                     onOpen();
                   }}
-                />
-              </span>
-            </Tooltip>
-            <Tooltip color="danger" content="删除">
-              <span
-                onClick={() => {
-                  deleteRes.mutate({
-                    id: server.id,
-                  });
-                }}
-                className="cursor-pointer text-lg text-danger active:opacity-50"
-              >
-                <DeleteIcon />
-              </span>
-            </Tooltip>
-          </div>
-        );
-      default:
-        return cellValue;
-    }
-  }, []);
+                >
+                  <EditIcon />
+                </span>
+              </Tooltip>
+              <Tooltip color="danger" content="删除">
+                <span
+                  onClick={() => {
+                    deleteRes.mutate({
+                      id: server.id,
+                    });
+                  }}
+                  className="cursor-pointer text-lg text-danger active:opacity-50"
+                >
+                  <DeleteIcon />
+                </span>
+              </Tooltip>
+            </div>
+          );
+        default:
+          return cellValue as string;
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!isOpen && isEdit) {
@@ -176,7 +176,7 @@ const ServerList: FunctionComponent = () => {
                   {columnKey === "kubeToken" ? (
                     <Textarea
                       className="max-w-xs"
-                      defaultValue={renderCell(row, columnKey)}
+                      defaultValue={renderCell(row, columnKey) as string}
                     />
                   ) : (
                     renderCell(row, columnKey)

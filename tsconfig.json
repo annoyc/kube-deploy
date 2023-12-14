@@ -12,6 +12,8 @@
     /* Strictness */
     "strict": true,
     "noUncheckedIndexedAccess": true,
+    "ignoreDeprecations": "5.0",
+    "suppressImplicitAnyIndexErrors": true,
     "checkJs": true,
 
     /* Bundled projects */
